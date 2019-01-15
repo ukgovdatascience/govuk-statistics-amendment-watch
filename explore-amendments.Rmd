@@ -1,31 +1,55 @@
-# Explore amendments in GOV.UK statistics publications
+---
+title: Amendments to GOV.UK statistics publications
+description: |
+  Exploratory data analysis to inform Reproducible Analytical Pipelines
+author: Duncan Garmonsway
+date: January 15, 2019
+output:
+  html_document:
+    self_contained: true
+    code_folding: hide
+---
 
+## Introduction
 
-```r
+The [Reproducible Analytical Pipeline
+(RAP)](https://dataingovernment.blog.gov.uk/2017/03/27/reproducible-analytical-pipeline/)
+is an alternative production methodology for automating the bulk of steps
+involved in creating a statistical report.
+
+One motivation to use RAP methods is to avoid making mistakes, by removing as
+much opportunity for human error as possible.  For example, the following
+note describes a trivial amendment that could have been avoided by programming a
+computer to update the date of the quarterly publication.
+
+> The date for the publication ... was incorrectly stated as 14 February 2019,
+> this has now been corrected to 21 February 2019 which is in line with the
+> release calendar and established practice to publish on the third Thursday of
+> the month.
+
+* How common are amendments?
+* Are they becoming more or less common?
+* Why are amendments made?
+
+```{r setup, include = FALSE}
 library(tidyverse)
 library(lubridate)
 library(ebbr)
+library(DT)
 library(here)
 
+knitr::opts_chunk$set(cache = TRUE,
+                      echo = TRUE,
+                      fig.width = 9.5)
+
 reports <- readRDS(here("reports.Rds"))
+
+theme_set(theme_bw())
 ```
 
-```
-## Error in here("reports.Rds"): unused argument ("reports.Rds")
-```
+```{r change-history}
+# Extract the change history of each report
 
-## Extract the change history of each report
-
-
-```r
-reports <- readRDS(here("reports.Rds"))
-```
-
-```
-## Error in here("reports.Rds"): unused argument ("reports.Rds")
-```
-
-```r
 empty_changes <- tibble(public_timestamp = character(),
                         note = character())
 
@@ -71,12 +95,12 @@ changes <-
 no_changes <- anti_join(reports, changes, by = "base_path")
 ```
 
-## How many changes?
+## How common are changes (not just amendments)?
 
+Many first publications were backdated.  The date of the first change is a
+reasonable estimate for the date that GOV.UK first published statistics
 
-```r
-# Many first publications were backdated.  The date of the first change is a
-# reasonable estimate for the date that GOV.UK first published statistics
+```{r first-change-date}
 first_change_date <-
   changes %>%
   dplyr::filter(!is_first_publication) %>%
@@ -86,8 +110,7 @@ first_change_date <-
 
 ### Changes per month
 
-
-```r
+```{r changes-per-month}
 changes %>%
   dplyr::filter(public_timestamp >= first_change_date,
                 month < max(month)) %>% # drop the latest (incomplete) month
@@ -97,16 +120,12 @@ changes %>%
   scale_colour_discrete(name = "First publication") +
   xlab("") +
   ylab("Number of new publications or changes") +
-  ggtitle("Number of new publications and changes per month") +
-  theme_bw()
+  ggtitle("Number of new publications and changes per month")
 ```
-
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png)
 
 ### Changes per year
 
-
-```r
+```{r changes-per-year}
 changes %>%
   dplyr::filter(public_timestamp >= first_change_date,
                 year < max(year)) %>% # drop the latest (incomplete) year
@@ -116,23 +135,23 @@ changes %>%
   scale_colour_discrete(name = "First publication") +
   xlab("") +
   ylab("Number of new publications or changes") +
-  ggtitle("Number of new publications and changes per year") +
-  theme_bw()
+  ggtitle("Number of new publications and changes per year")
 ```
 
-![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png)
+## How common are amendments?
 
-## How many amendments?
+Define 'amendment' as a change where the following regex matches (not case
+sensitive).
 
+`mistake)|(error)|(correct)|(wrong)|(amend)`
 
-```r
+```{r amendments}
 amendments <- dplyr::filter(changes, is_amendment)
 ```
 
 ### Amendments per month
 
-
-```r
+```{r amendments-per-month}
 amendments %>%
   dplyr::filter(public_timestamp >= first_change_date,
                 month < max(month)) %>% # drop the latest (incomplete) month
@@ -141,16 +160,12 @@ amendments %>%
   geom_line() +
   xlab("") +
   ylab("Number of amendments") +
-  ggtitle("Number of amendments per month") +
-  theme_bw()
+  ggtitle("Number of amendments per month")
 ```
-
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png)
 
 ### Amendments per year
 
-
-```r
+```{r amendments-per-year}
 amendments %>%
   dplyr::filter(public_timestamp >= first_change_date,
                 year < max(year)) %>% # drop the latest (incomplete) year
@@ -159,16 +174,12 @@ amendments %>%
   geom_line() +
   xlab("") +
   ylab("Number of amendments") +
-  ggtitle("Number of amendments per year") +
-  theme_bw()
+  ggtitle("Number of amendments per year")
 ```
-
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png)
 
 ### Amendments as percentage of all changes per month
 
-
-```r
+```{r amendments-percent-per-month}
 changes %>%
   dplyr::filter(public_timestamp >= first_change_date,
                 month < max(month)) %>% # drop the latest (incomplete) month
@@ -180,16 +191,12 @@ changes %>%
   scale_y_continuous(labels = scales::percent) +
   xlab("") +
   ylab("") +
-  ggtitle("Amendments as a percentage of all changes (monthly)") +
-  theme_bw()
+  ggtitle("Amendments as a percentage of all changes (monthly)")
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png)
+#' ### Amendments as percentage of all changes per year
 
-### Amendments as percentage of all changes per year
-
-
-```r
+```{r amendments-percent-per-year}
 changes %>%
   dplyr::filter(public_timestamp >= first_change_date,
                 year < max(year)) %>% # drop the latest (incomplete) year
@@ -201,19 +208,20 @@ changes %>%
   scale_y_continuous(labels = scales::percent) +
   xlab("") +
   ylab("") +
-  ggtitle("Amendments as a percentage of all changes (annual)") +
-  theme_bw()
+  ggtitle("Amendments as a percentage of all changes (annual)")
 ```
 
-![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png)
-
 ### Organisations with the highest and lowest rate of amendments
+
 Using fitted Empirical Bayes model to reduce noise of orgs with few
-publications.
+publications.  The prior is parameterised by fitting a beta-binomial to all the
+data by maximum likelihood estimation; see
+[`?ebbr::ebb_fit_prior`](https://github.com/dgrtwo/ebbr/blob/master/R/ebb_fit_prior.R)
+for details.
 
-
-```r
-changes %>%
+```{r bayes-rate-estimate, fig.height = 8}
+bayes_rates <-
+  changes %>%
   dplyr::filter(public_timestamp >= first_change_date,
                 year < max(year)) %>% # drop the latest (incomplete) year
   count(year, organisation, is_amendment) %>%
@@ -221,7 +229,11 @@ changes %>%
   mutate(total = `TRUE` + `FALSE`,
          amendments = `TRUE`) %>%
   select(-`TRUE`, -`FALSE`) %>%
-  add_ebb_estimate(amendments, total) %>%
+  add_ebb_estimate(amendments, total)
+```
+
+```{r amendment-rate-low, fig.height = 8}
+bayes_rates %>%
   # keep orgs with less than this rate of amendments
   dplyr::filter(.high <= .01) %>%
   ggplot(aes(organisation)) +
@@ -236,30 +248,11 @@ changes %>%
   facet_wrap(~ year, ncol = 1, scales = "free_y") +
   coord_flip() +
   xlab("") +
-  ylab("Percentage of all changes that were amendments") +
-  theme_bw()
+  ylab("Percentage of all changes that were amendments")
 ```
 
-![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png)
-
-```r
-ggsave("org-amendment-rate-lowest.png")
-```
-
-```
-## Saving 7 x 7 in image
-```
-
-```r
-changes %>%
-  dplyr::filter(public_timestamp >= first_change_date,
-                year < max(year)) %>% # drop the latest (incomplete) year
-  count(year, organisation, is_amendment) %>%
-  spread(is_amendment, n, fill = 0L) %>%
-  mutate(total = `TRUE` + `FALSE`,
-         amendments = `TRUE`) %>%
-  select(-`TRUE`, -`FALSE`) %>%
-  add_ebb_estimate(amendments, total) %>%
+```{r amendment-rate-high, fig.height = 5}
+bayes_rates %>%
   # keep orgs with at least this rate of amendments
   dplyr::filter(.low >= .05) %>%
   ggplot(aes(organisation)) +
@@ -274,44 +267,25 @@ changes %>%
   facet_wrap(~ year, ncol = 1, scales = "free_y") +
   coord_flip() +
   xlab("") +
-  ylab("Percentage of all changes that were amendments") +
-  theme_bw()
+  ylab("Percentage of all changes that were amendments")
 ```
 
-![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-2.png)
+## Why are amendments made
 
-```r
-ggsave("org-amendment-rate-highest.png")
-```
-
-```
-## Saving 7 x 7 in image
-```
-
-### Code to inspect apparent amendment notes of particular organisations
-
-
-```r
+```{r table-of-notes, layout = "l-page"}
 changes %>%
-  dplyr::filter(is_amendment,
-                organisation == "Department for Education") %>%
-  count(note, sort = TRUE)
+  dplyr::filter(is_amendment) %>%
+  arrange(desc(public_timestamp)) %>%
+  select(publication = base_path,
+         organisation,
+         timestamp = public_timestamp,
+         note) %>%
+  datatable()
 ```
 
-```
-## # A tibble: 53 x 2
-##    note                                                                   n
-##    <chr>                                                              <int>
-##  1 " Updated parliamentary constituency underlying data table to cor…     1
-##  2 A correction has been made to the Inner and Outer London staffing…     1
-##  3 "A minor amendment has been made to A level pass rate within Main…     1
-##  4 Added 'Additional methodologies at school and LA levels' document…     1
-##  5 Added additional underlying data to include LA district level inf…     1
-##  6 Added results for Bedford local authority. Changed the distributi…     1
-##  7 Additional tables 2 - updated 01/05/2014. Figures for Reading loc…     1
-##  8 Amended EBacc English explanation in section 6 of the main text d…     1
-##  9 Amended KS1 metadata file in 'Underlying data'.                        1
-## 10 Amended percentages for inner London in tables 8a and 8c in the l…     1
-## # … with 43 more rows
+## Session info
+
+```{r}
+devtools::session_info()
 ```
 
