@@ -32,7 +32,6 @@ This article investigates.
 * How common amendments are
 * Whether they are becoming more or less common
 * Why amendments are made
-
 The code is on
 [GitHub](https://github.com/ukgovdatascience/govuk-statistics-amendment-watch)
 
@@ -335,7 +334,7 @@ data by maximum likelihood estimation; see
 [`?ebbr::ebb_fit_prior`](https://github.com/dgrtwo/ebbr/blob/master/R/ebb_fit_prior.R)
 for details.
 
-```{r bayes-rate-estimate, fig.height = 10}
+```{r bayes-rate-estimate, fig.height = 10, fig.width = 10}
 bayes_rates <-
   changes %>%
   dplyr::filter(public_timestamp >= first_change_date,
@@ -374,7 +373,7 @@ p_prop <-
                      limits = c(0, NA),
                      position = "right") +
   ggtitle("Actual and estimated amendment rate per organisation",
-          subtitle = "Ticks are the true percentage\nLines are the 95% credible interval of the Empirical Bayes estimate") +
+          subtitle = "Ticks: true percentage of amendments\nLines: 95% credible interval of the percentage of amendments") +
   coord_flip() +
   xlab("") +
   ylab("") +
