@@ -15,3 +15,13 @@
 * `./explore-amendments.Rmd` [Rendered on RPubs](http://rpubs.com/nacnudus/govuk-statistics-publications-amendments)
 
   1. Explore changes to each publication, in particular any amendments
+
+## Publish
+
+```r
+rsconnect::rpubsUpload("Amendments to GOV.UK statistics publications",
+                       "./explore-amendments.html",
+                       "./explore-amendments.Rmd",
+                       id = NULL,
+                       properties = list())
+```
